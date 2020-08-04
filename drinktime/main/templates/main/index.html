@@ -1,0 +1,7 @@
+<h1> Hello {{ user }} </h1>
+{% for drink in drinks %}
+	<p> {{ user }} was drinking {{ drink.drink_name }} in volume {{ drink.volume }} at {{ drink.drink_time }}</p>
+{% endfor %}
+<button type="button">
+	<a href="{% url 'drink' %}">Drink !</a>
+</button> 
