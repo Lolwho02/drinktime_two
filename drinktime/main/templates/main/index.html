@@ -1,7 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %} Index {% endblock %}
+
+{% block content %} 
 <h1> Hello {{ user }} </h1>
 {% for drink in drinks %}
-	<p> {{ user }} was drinking {{ drink.drink_name }} in volume {{ drink.volume }} at {{ drink.drink_time }}</p>
+	<p> <a href = "{% url 'profile' id=drink.user.id %}">{{ drink.user.username }}</a> was drinking {{ drink.drink_name }} in volume {{ drink.volume }} at {{ drink.drink_time|date:"D d M Y " }}</p>
 {% endfor %}
-<button type="button">
-	<a href="{% url 'drink' %}">Drink !</a>
-</button> 
+<a class="nav-link" href="{% url 'drink' %}">Drink !</a>
+{% endblock %} 

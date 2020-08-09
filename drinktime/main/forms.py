@@ -1,12 +1,12 @@
 from django import forms
-from main.models import Drink
+from main.models import Drink, User
 from django.utils import timezone
 
 
 class RegistrationForm(forms.Form):
 	""" Форма регистрации новых пользователей """
 
-	username = forms.CharField(max_length=16, min_length=6)
+	username = forms.CharField(max_length=16, min_length=4)
 	password = forms.CharField(max_length=32, min_length=4, widget=forms.PasswordInput)
 	password2 = forms.CharField(max_length=32, min_length=4, widget=forms.PasswordInput)
 	email = forms.EmailField(max_length=32, min_length=6)
@@ -34,6 +34,9 @@ class DrinkForm(forms.ModelForm):
 	class Meta:
 		model = Drink
 		fields = ['drink_name', 'drink_time', 'volume']
+		widgets = {
+			'drink_time': forms.DateTimeInput(attrs={'type':'datetime-local'})
+		}
 
 	def clean(self):
 		""" Переопределение метода валидации, чтобы нельзя было указать будущее время """

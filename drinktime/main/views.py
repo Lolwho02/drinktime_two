@@ -2,7 +2,6 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.contrib.auth.views import LogoutView
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render, redirect
@@ -11,7 +10,7 @@ from django.views.generic import FormView
 from django.urls import reverse_lazy
 from .forms import RegistrationForm, LoginForm, DrinkForm
 from django import forms
-from main.models import Drink
+from main.models import Drink, User, Follows
 
 
 class IndexView(LoginRequiredMixin, View):
@@ -19,13 +18,14 @@ class IndexView(LoginRequiredMixin, View):
 
     def get(self, request):
         user = request.user
-        username = user.username
-        drinks = Drink.objects.filter(user=user)
-
+        my_drinks = Drink.objects.filter(user=user)  # получение своей информации
+        followed_drinks = Drink.objects.filter(user__followers__follower__pk=user.pk)  # получение информации из подписок
+        drinks = my_drinks.union(followed_drinks).order_by('-drink_time')
         return render(request, 'main/index.html', context={
-                                                'user': username,
+                                                'user': user,
                                                 'drinks': drinks,
                                                     })
+
 
 class LoginView(View):
     """ Логика пользовательских логинов """
@@ -46,7 +46,6 @@ class LoginView(View):
                 return redirect(reverse_lazy('index'))
         else:
             redirect(reverse_lazy('index'))
-
 
 class Logout(LogoutView):
     """ Логика пользовательского логаута """
@@ -74,6 +73,7 @@ class RegistrationView(FormView):
         else:
             return redirect(reverse_lazy('index'))
 
+
 class DrinkView(LoginRequiredMixin, FormView):
     """ Логика страницы с напитками """
     
@@ -91,6 +91,62 @@ class DrinkView(LoginRequiredMixin, FormView):
 
     def get(self, request):
         return render(request, 'main/drink.html', context={'form':DrinkForm()})
+
+
+class ProfileView(LoginRequiredMixin, View):
+    """ Логика страницы пользователя """
+
+    def get(self, request, id):
+
+        try:
+            user = User.objects.get(pk=id)
+            followers = [f.follower for f in user.followers.all()]
+            drinks = Drink.objects.filter(user=user)
+        
+        except User.DoesNotExist:
+            return HttpResponse(content='User not found', status=404)
+
+        return render(request, 'main/user.html', context={
+                                                        'user': user,
+                                                        'followers': followers,
+                                                        'drinks': drinks
+                                                        })
+
+
+class FollowView(LoginRequiredMixin, View):
+    """ Логика подписки на пользователя """
+
+    def get(self, request, id):
+
+        try:
+            user = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return HttpResponse(content='User not found', status=404)
+
+        if request.user != user:
+            request.user.follow(user)
+        else:
+            return HttpResponse(content='You cant follow yourself', status=400)
+
+        return redirect(f'/user/{id}/')
+
+
+class UnfollowView(LoginRequiredMixin, View):
+    """ Логика подписки на пользователя """
+
+    def get(self, request, id):
+
+        try:
+            user = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return HttpResponse(content='User not found', status=404)
+        
+        if request.user != user:
+            request.user.unfollow(user)
+        else:
+            return HttpResponse(content='You cant unfollow yourself', status=400)
+
+        return redirect(f'/user/{id}/')
 
 
 

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}
+	{{ user.username }} Profile
+{% endblock %}
+{% block content %}
+	<p>{{ user.username }} profile</p>
+	<p>Followers:</p>
+	{% for f in followers %}
+		<p><a href="{% url 'profile' f.pk %}"> {{ f.username }} </p>
+	{% endfor %}
+	{% if request.user.username != user.username and request.user not in followers %}
+		<p><a href="{% url 'follow_function' id=user.id %}">Follow</a></p>
+	{% endif %}
+	{% if request.user.username != user.username and request.user in followers %}
+		<p><a href="{% url 'unfollow_function' id=user.id %}">Unfollow</a></p>
+	{% endif %}
+	<hr>
+	{% if request.user == user %}
+		{% for drink in drinks %}
+		<p> You are drinked {{ drink.drink_name }} in volume {{ drink.volume }} at {{ drink.drink_time }}</p>
+		{% endfor %}
+	{% else %}
+		{% for drink in drinks %}
+		<p> {{ user.username }} was drinked {{ drink.drink_name }} in volume {{ drink.volume }} at {{ drink.drink_time }}</p>
+		{% endfor %}
+	{% endif %}
+{% endblock %}
